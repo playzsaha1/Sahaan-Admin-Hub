@@ -7,7 +7,7 @@ export default function LoginPage({ searchParams }: { searchParams: { returnTo?:
     <main className="grid min-h-screen place-items-center px-4 py-10">
       <Card className="w-full max-w-md">
         <h1 className="text-2xl font-semibold text-ink">Log in</h1>
-        <p className="mt-2 text-sm leading-6 text-ink/65">Use your Sahaan Admin Hub account. Passwords are handled by Firebase Authentication.</p>
+        <p className="mt-2 text-sm leading-6 text-ink/65">Sign in to your Sahaan Admin Hub workspace or choose a demo account below.</p>
         <div className="mt-6">
           <LoginForm returnTo={searchParams.returnTo || "/dashboard"} />
         </div>

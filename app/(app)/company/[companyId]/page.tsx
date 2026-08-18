@@ -18,7 +18,7 @@ export default async function CompanyDashboardPage({ params }: { params: { compa
       <CompanyNav companyId={params.companyId} />
       <PageHeader title={company?.businessName ?? "Company"} description="Operational counts are derived from real company records only." />
       <div className="grid gap-4 md:grid-cols-4">
-        <Card><p className="text-sm text-ink/60">Today's Jobs</p><p className="mt-2 text-3xl font-semibold">{jobs.filter((job) => job.date === today).length}</p></Card>
+        <Card><p className="text-sm text-ink/60">Today&apos;s Jobs</p><p className="mt-2 text-3xl font-semibold">{jobs.filter((job) => job.date === today).length}</p></Card>
         <Card><p className="text-sm text-ink/60">Workers</p><p className="mt-2 text-3xl font-semibold">{members.length}</p></Card>
         <Card><p className="text-sm text-ink/60">Clients</p><p className="mt-2 text-3xl font-semibold">{clients.length}</p></Card>
         <Card><p className="text-sm text-ink/60">Completed Jobs</p><p className="mt-2 text-3xl font-semibold">{jobs.filter((job) => job.status === "Completed").length}</p></Card>

@@ -8,7 +8,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-lg">
         <h1 className="text-2xl font-semibold text-ink">Create your account</h1>
         <p className="mt-2 text-sm leading-6 text-ink/65">
-          Individual accounts include only your full name and job or skill for V1. Email verification is required before invitations or company access.
+          Enter your details to create an account and access your company workspace.
         </p>
         <div className="mt-6">
           <SignupForm />

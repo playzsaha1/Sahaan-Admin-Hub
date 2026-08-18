@@ -2,17 +2,15 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { adminAuth } from "@/lib/firebase/admin";
-import { createUserProfile } from "@/lib/data/repository";
+import { authenticateUser, registerUser } from "@/lib/data/repository";
 import { sessionCookieName } from "@/lib/auth/session";
 import { signupSchema } from "@/lib/validation";
 
-const fiveDaysMs = 60 * 60 * 24 * 5 * 1000;
+const thirtyDaysMs = 60 * 60 * 24 * 30 * 1000;
 
-export async function createSession(idToken: string) {
-  const sessionCookie = await adminAuth().createSessionCookie(idToken, { expiresIn: fiveDaysMs });
-  cookies().set(sessionCookieName, sessionCookie, {
-    maxAge: fiveDaysMs / 1000,
+export async function setSessionCookie(userId: string) {
+  cookies().set(sessionCookieName, userId, {
+    maxAge: thirtyDaysMs / 1000,
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -20,20 +18,49 @@ export async function createSession(idToken: string) {
   });
 }
 
-export async function completeSignup(input: unknown, idToken: string) {
-  const parsed = signupSchema.parse(input);
-  const decoded = await adminAuth().verifyIdToken(idToken, true);
-  if (decoded.email !== parsed.email) throw new Error("Authenticated email did not match signup email.");
+export async function loginWithCredentials(formData: FormData): Promise<{ success: boolean; error?: string }> {
+  const email = formData.get("email")?.toString() ?? "";
+  const password = formData.get("password")?.toString() ?? "";
 
-  await createUserProfile({
-    id: decoded.uid,
-    email: parsed.email,
-    emailVerified: Boolean(decoded.email_verified),
-    fullName: parsed.fullName,
-    jobSkill: parsed.jobSkill
-  });
+  if (!email || !password) {
+    return { success: false, error: "Please provide both email and password." };
+  }
 
-  await createSession(idToken);
+  try {
+    const user = await authenticateUser(email, password);
+    await setSessionCookie(user.id);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Invalid email or password." };
+  }
+}
+
+export async function signupWithCredentials(formData: FormData): Promise<{ success: boolean; error?: string }> {
+  try {
+    const rawInput = {
+      fullName: formData.get("fullName")?.toString() ?? "",
+      email: formData.get("email")?.toString() ?? "",
+      password: formData.get("password")?.toString() ?? "",
+      jobSkill: formData.get("jobSkill")?.toString() ?? ""
+    };
+
+    const parsed = signupSchema.parse(rawInput);
+    const user = await registerUser(parsed);
+    await setSessionCookie(user.id);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unable to register account." };
+  }
+}
+
+export async function quickDemoLogin(email: string) {
+  try {
+    const user = await authenticateUser(email, "password123456");
+    await setSessionCookie(user.id);
+  } catch {
+    // ignore
+  }
+  redirect("/dashboard");
 }
 
 export async function logout() {

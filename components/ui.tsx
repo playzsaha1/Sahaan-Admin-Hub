@@ -73,3 +73,58 @@ export function Select({ label, name, values }: { label: string; name: string; v
 export function SubmitButton({ children }: { children: ReactNode }) {
   return <button className="inline-flex h-10 items-center justify-center rounded-md bg-pine px-4 text-sm font-semibold text-white transition hover:bg-pine-dark">{children}</button>;
 }
+
+export type StatusVariant = "active" | "pending" | "rejected" | "info" | "neutral";
+
+export function getStatusVariant(status: string): StatusVariant {
+  const s = status.toLowerCase();
+  if (["active", "business details verified", "accepted", "completed", "yes", "verified"].includes(s)) {
+    return "active";
+  }
+  if (["pending", "unreviewed", "scheduled", "new"].includes(s)) {
+    return "pending";
+  }
+  if (["rejected", "suspended", "cancelled", "declined", "removed", "no"].includes(s)) {
+    return "rejected";
+  }
+  if (["in progress", "on the way"].includes(s)) {
+    return "info";
+  }
+  return "neutral";
+}
+
+export function StatusPill({ status, variant }: { status: string; variant?: StatusVariant }) {
+  const resolvedVariant = variant || getStatusVariant(status);
+
+  const styleMap: Record<StatusVariant, { pill: string; dot: string }> = {
+    active: {
+      pill: "bg-emerald-50 text-emerald-800 border-emerald-200/80",
+      dot: "bg-emerald-500"
+    },
+    pending: {
+      pill: "bg-amber-50 text-amber-800 border-amber-200/80",
+      dot: "bg-amber-500"
+    },
+    rejected: {
+      pill: "bg-rose-50 text-rose-800 border-rose-200/80",
+      dot: "bg-rose-500"
+    },
+    info: {
+      pill: "bg-sky-50 text-sky-800 border-sky-200/80",
+      dot: "bg-sky-500"
+    },
+    neutral: {
+      pill: "bg-slate-50 text-slate-700 border-slate-200",
+      dot: "bg-slate-400"
+    }
+  };
+
+  const { pill, dot } = styleMap[resolvedVariant];
+
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide", pill)}>
+      <span className={cn("h-1.5 w-1.5 rounded-full", dot)} />
+      {status}
+    </span>
+  );
+}

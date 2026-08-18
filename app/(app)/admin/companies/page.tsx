@@ -1,6 +1,6 @@
 import { adminCreateCompany } from "@/app/actions/company";
 import { PageHeader } from "@/components/app-shell";
-import { Card, EmptyState, Field, Select, SubmitButton, TextArea } from "@/components/ui";
+import { Card, EmptyState, Field, Select, StatusPill, SubmitButton, TextArea } from "@/components/ui";
 import { requireVerifiedSession } from "@/lib/auth/session";
 import { listAllCompanies, listUsers } from "@/lib/data/repository";
 import { assertPlatformAdmin } from "@/lib/permissions";
@@ -40,10 +40,30 @@ export default async function AdminCompaniesPage() {
         </form>
       </Card>
       {companies.length ? (
-        <div className="overflow-hidden rounded-lg border border-line bg-white">
+        <div className="overflow-hidden rounded-lg border border-line bg-white shadow-soft">
           <table className="w-full text-left text-sm">
-            <thead className="bg-mist text-ink/60"><tr><th className="p-3">Business</th><th className="p-3">Category</th><th className="p-3">Verification</th><th className="p-3">Status</th></tr></thead>
-            <tbody>{companies.map((company) => <tr key={company.id} className="border-t border-line"><td className="p-3 font-medium">{company.businessName}</td><td className="p-3">{company.businessCategory}</td><td className="p-3">{company.verificationStatus}</td><td className="p-3">{company.status}</td></tr>)}</tbody>
+            <thead className="bg-mist/80 text-xs font-semibold uppercase tracking-wider text-ink/70">
+              <tr>
+                <th className="p-3.5">Business</th>
+                <th className="p-3.5">Category</th>
+                <th className="p-3.5">Verification</th>
+                <th className="p-3.5">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {companies.map((company) => (
+                <tr key={company.id} className="hover:bg-mist/30 transition-colors">
+                  <td className="p-3.5 font-semibold text-ink">{company.businessName}</td>
+                  <td className="p-3.5 text-ink/70">{company.businessCategory}</td>
+                  <td className="p-3.5">
+                    <StatusPill status={company.verificationStatus} />
+                  </td>
+                  <td className="p-3.5">
+                    <StatusPill status={company.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       ) : (

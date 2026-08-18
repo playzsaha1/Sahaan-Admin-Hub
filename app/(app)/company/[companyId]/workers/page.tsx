@@ -1,5 +1,5 @@
 import { CompanyNav, PageHeader } from "@/components/app-shell";
-import { EmptyState } from "@/components/ui";
+import { EmptyState, StatusPill } from "@/components/ui";
 import { requireVerifiedSession } from "@/lib/auth/session";
 import { listCompanyMembers } from "@/lib/data/repository";
 
@@ -12,16 +12,29 @@ export default async function WorkersPage({ params }: { params: { companyId: str
       <CompanyNav companyId={params.companyId} />
       <PageHeader title="Workers" description="Removing a worker removes only their membership from this company, not their individual account." />
       {members.length ? (
-        <div className="overflow-hidden rounded-lg border border-line bg-white">
+        <div className="overflow-hidden rounded-lg border border-line bg-white shadow-soft">
           <table className="w-full text-left text-sm">
-            <thead className="bg-mist text-ink/60"><tr><th className="p-3">Name</th><th className="p-3">Job / Skill</th><th className="p-3">Company Role</th><th className="p-3">Status</th></tr></thead>
-            <tbody>
+            <thead className="bg-mist/80 text-xs font-semibold uppercase tracking-wider text-ink/70">
+              <tr>
+                <th className="p-3.5">Name</th>
+                <th className="p-3.5">Job / Skill</th>
+                <th className="p-3.5">Company Role</th>
+                <th className="p-3.5">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
               {members.map((member) => (
-                <tr key={member.id} className="border-t border-line">
-                  <td className="p-3 font-medium">{member.user?.fullName ?? "Unknown user"}</td>
-                  <td className="p-3">{member.user?.jobSkill ?? ""}</td>
-                  <td className="p-3">{member.role}</td>
-                  <td className="p-3">{member.status}</td>
+                <tr key={member.id} className="hover:bg-mist/30 transition-colors">
+                  <td className="p-3.5 font-medium text-ink">{member.user?.fullName ?? "Unknown user"}</td>
+                  <td className="p-3.5 text-ink/70">{member.user?.jobSkill ?? "—"}</td>
+                  <td className="p-3.5">
+                    <span className="inline-flex rounded-md bg-mist px-2 py-0.5 text-xs font-semibold text-ink">
+                      {member.role}
+                    </span>
+                  </td>
+                  <td className="p-3.5">
+                    <StatusPill status={member.status} />
+                  </td>
                 </tr>
               ))}
             </tbody>

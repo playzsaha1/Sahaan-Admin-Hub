@@ -2,7 +2,6 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { adminAuth, hasAdminFirebaseConfig } from "@/lib/firebase/admin";
 import { getUserById } from "@/lib/data/repository";
 import type { AppUser } from "@/lib/types";
 
@@ -16,16 +15,16 @@ export type AuthSession = {
 };
 
 export async function getSession(): Promise<AuthSession | null> {
-  const token = cookies().get(sessionCookieName)?.value;
-  if (!token || !hasAdminFirebaseConfig()) return null;
+  const userId = cookies().get(sessionCookieName)?.value;
+  if (!userId) return null;
 
   try {
-    const decoded = await adminAuth().verifySessionCookie(token, true);
-    const user = await getUserById(decoded.uid);
+    const user = await getUserById(userId);
+    if (!user) return null;
     return {
-      uid: decoded.uid,
-      email: decoded.email ?? "",
-      emailVerified: Boolean(decoded.email_verified),
+      uid: user.id,
+      email: user.email,
+      emailVerified: user.emailVerified,
       user
     };
   } catch {
