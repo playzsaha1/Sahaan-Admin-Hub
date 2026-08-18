@@ -1,0 +1,80 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function userDoc(userId) {
+      return get(/databases/$(database)/documents/users/$(userId));
+    }
+
+    function isPlatformAdmin() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        userDoc(request.auth.uid).data.platformRole == "platformAdmin";
+    }
+
+    function activeMember(companyId) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/companyMembers/$(companyId + "_" + request.auth.uid)) &&
+        get(/databases/$(database)/documents/companyMembers/$(companyId + "_" + request.auth.uid)).data.status == "Active";
+    }
+
+    function activeCompany(companyId) {
+      return exists(/databases/$(database)/documents/companies/$(companyId)) &&
+        get(/databases/$(database)/documents/companies/$(companyId)).data.status == "Active";
+    }
+
+    match /users/{userId} {
+      allow create: if isSelf(userId)
+        && request.resource.data.platformRole == "user"
+        && request.resource.data.keys().hasOnly(["email", "emailVerified", "fullName", "jobSkill", "platformRole", "status", "createdAt", "updatedAt"]);
+      allow read: if isSelf(userId) || isPlatformAdmin();
+      allow update: if isSelf(userId)
+        && !("platformRole" in request.resource.data.diff(resource.data).changedKeys())
+        && !("status" in request.resource.data.diff(resource.data).changedKeys());
+      allow delete: if false;
+    }
+
+    match /companies/{companyId} {
+      allow read: if isPlatformAdmin() || (activeCompany(companyId) && activeMember(companyId));
+      allow create, update, delete: if false;
+    }
+
+    match /companyMembers/{memberId} {
+      allow read: if isPlatformAdmin() || activeMember(resource.data.companyId);
+      allow create, update, delete: if false;
+    }
+
+    match /companyInvitations/{invitationId} {
+      allow read: if isPlatformAdmin() || (signedIn() && resource.data.invitedUserId == request.auth.uid) || activeMember(resource.data.companyId);
+      allow create, update, delete: if false;
+    }
+
+    match /clients/{clientId} {
+      allow read: if activeCompany(resource.data.companyId) && activeMember(resource.data.companyId);
+      allow create, update, delete: if false;
+    }
+
+    match /jobs/{jobId} {
+      allow read: if activeCompany(resource.data.companyId) && activeMember(resource.data.companyId);
+      allow create, update, delete: if false;
+    }
+
+    match /auditLogs/{auditId} {
+      allow read: if isPlatformAdmin() || activeMember(resource.data.companyId);
+      allow create, update, delete: if false;
+    }
+
+    match /moderationRecords/{recordId} {
+      allow read: if isPlatformAdmin();
+      allow create, update, delete: if false;
+    }
+  }
+}
